@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webstatic
+  labels:
+    app: webstatic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webstatic
+  template:
+    metadata:
+      labels:
+        app: webstatic
+    spec:
+      containers:
+      - name: webstatic
+        image: yabadabadoo27/webstatic:latest
+        ports:
+        - containerPort: 80
