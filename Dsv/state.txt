@@ -1,0 +1,3 @@
+Karnataka,KA
+Maharastra,MH
+Kerala,KL
