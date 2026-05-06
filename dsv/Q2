@@ -1,0 +1,49 @@
+import pandas as pd
+
+df = pd.read_csv("restaurant.csv")
+
+df['Date_of_visit'] = pd.to_datetime(df['Date_of_visit'])
+
+df['Month'] = df['Date_of_visit'].dt.month
+df['Year'] = df['Date_of_visit'].dt.year
+
+df['In-Time'] = pd.to_datetime(df['In-Time'])
+df['Out-time'] = pd.to_datetime(df['Out-time'])
+
+df['Time_Spent'] = (
+    df['Out-time'] - df['In-Time']
+).dt.total_seconds() / 60
+
+def get_season(month):
+
+    if month in [3,4,5]:
+        return "Summer"
+
+    elif month in [6,7,8,9]:
+        return "Rainy"
+
+    else:
+        return "Winter"
+
+df['Season'] = df['Month'].apply(get_season)
+
+monthly_business = df.groupby(
+    ['Year','Month']
+)['Bill_amount'].mean()
+
+print(monthly_business)
+
+selected = df[
+    (df['Year'] == 2025) &
+    (df['Month'] == 5)
+]
+
+average_time = selected['Time_Spent'].mean()
+
+print("Average Time Spent:", average_time)
+
+correlation = df['Time_Spent'].corr(
+    df['Number_of_customers']
+)
+
+print("Correlation:", correlation)
