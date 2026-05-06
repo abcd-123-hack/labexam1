@@ -1,0 +1,91 @@
+package agegendercount;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.Period;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class AgeGenderCount {
+
+    public static class AgeMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text outputKey = new Text();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String[] fields = value.toString().split(",");
+
+            String gender = fields[1];
+            String dob = fields[2];
+
+            LocalDate birthDate = LocalDate.parse(dob);
+            LocalDate currentDate = LocalDate.now();
+
+            int age = Period.between(birthDate, currentDate).getYears();
+
+            String ageGroup = "";
+
+            if (age < 20)
+                ageGroup = "<20";
+            else if (age >= 21 && age <= 40)
+                ageGroup = "21-40";
+            else if (age >= 41 && age <= 60)
+                ageGroup = "41-60";
+            else
+                ageGroup = "60+";
+
+            outputKey.set(ageGroup + "-" + gender);
+
+            context.write(outputKey, one);
+        }
+    }
+
+    public static class AgeReducer
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterable<IntWritable> values,
+                           Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+
+            context.write(key, new IntWritable(sum));
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+
+        Job job = Job.getInstance(conf, "Age Gender Count");
+
+        job.setJarByClass(AgeGenderCount.class);
+
+        job.setMapperClass(AgeMapper.class);
+        job.setReducerClass(AgeReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
