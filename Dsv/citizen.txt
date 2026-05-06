@@ -1,3 +1,0 @@
-Sam, 01-01-2000,1234567890,sam@gmail.com,Karnataka
-adi, 02-02-2001,0987654321,adi@gmail.com,Maharastra
-vik, 03-03-2002,1234509876,vik@gmail.com,Kerala
